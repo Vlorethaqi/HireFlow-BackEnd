@@ -37,6 +37,25 @@ router.get("/", async (req, res) => {
   }
 });
 
+//me delete user
+router.delete("/:id", async (req, res) => { //DELETE http://localhost:3000/users/5
+  try {
+    const { id } = req.params; //marrim id pasi kemi nga url me express bahet me params
+
+    const user = await User.findByPk(id);//kerkon user ne DB me primaryID
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });// i kthen frontit mesazhin
+    }
+
+    await user.destroy();//e fshin userin ne db nese gjendet
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message }); // i kthen frontit mesazhin
+  }
+});
+
 export default router;
 
 //pra ketu po perdorim sequelize jo sql query per me kriju psh user.create dhe user.findall mi selektu
