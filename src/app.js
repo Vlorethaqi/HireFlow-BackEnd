@@ -3,6 +3,7 @@ import cors from "cors";  //me leju komunikim me frontend(react)
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";  //marrim routes qe kemi
 import companyRoutes from "./routes/companyRoutes.js";
+import candidateProfileRoutes from "./routes/candidateProfiles.js";
 
 const app = express();  
 
@@ -12,6 +13,7 @@ app.use(express.json()); //me leju me lexu json body
 app.use(loggerMiddleware);
 app.use("/users", userRoutes);  //krejt requst-at qe fillojne me users mi dergu ne userRoutes
 app.use("/companies", companyRoutes);
+app.use("/candidate-profiles", candidateProfileRoutes);
 
 
 //kjo me posht vetem me testu kur e hapim url me get a po funksionon edhe a po na kthehet mesazhi 
