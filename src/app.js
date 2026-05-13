@@ -4,6 +4,7 @@ import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import userRoutes from "./routes/userRoutes.js";  //marrim routes qe kemi
 import companyRoutes from "./routes/companyRoutes.js";
 import candidateProfileRoutes from "./routes/candidateProfiles.js";
+import applicationStatusRoutes from "./routes/applicationStatusRoutes.js";
 
 const app = express();  
 
@@ -14,6 +15,7 @@ app.use(loggerMiddleware);
 app.use("/users", userRoutes);  //krejt requst-at qe fillojne me users mi dergu ne userRoutes
 app.use("/companies", companyRoutes);
 app.use("/candidate-profiles", candidateProfileRoutes);
+app.use("/application-statuses", applicationStatusRoutes);
 
 
 //kjo me posht vetem me testu kur e hapim url me get a po funksionon edhe a po na kthehet mesazhi 
