@@ -1,4 +1,4 @@
-import User from "./User.js";
+import User from "./users.js";
 import Company from "./Company.js";
 import Department from "./Department.js";
 import Job from "./Job.js";

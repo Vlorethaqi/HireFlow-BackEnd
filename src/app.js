@@ -1,7 +1,7 @@
 import express from "express"; //krijojme server api
 import cors from "cors";  //me leju komunikim me frontend(react)
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
-import userRoutes from "./routes/userRoutes.js";  //marrim routes qe kemi
+import userRoutes from "./routes/users.routes.js";  //marrim routes qe kemi
 import companyRoutes from "./routes/companyRoutes.js";
 
 const app = express();  
