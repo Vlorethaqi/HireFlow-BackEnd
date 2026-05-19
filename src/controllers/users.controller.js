@@ -1,87 +1,126 @@
 import * as userService from "../services/users.service.js";
 
-export async function getAllUsers(req, res) {
-  try {
-    const users = await userService.getAllUsersService();
 
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message
+// GET ALL USERS (multi-tenant)
+export async function getAllUsers(req, res, next) {
+  try {
+    const companyId = req.user.companyId;
+
+    const users = await userService.getAllUsersService(companyId);
+
+    res.status(200).json({
+      success: true,
+      data: users
     });
+
+  } catch (error) {
+    next(error);
   }
 }
 
-export async function getUserById(req, res) {
+
+// GET USER BY ID
+export async function getUserById(req, res, next) {
   try {
-    const user = await userService.getUserByIdService(req.params.id);
+    const companyId = req.user.companyId;
+    const id = req.params.id;
+
+    const user = await userService.getUserByIdService(id, companyId);
 
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: "User not found"
       });
     }
 
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message
+    res.status(200).json({
+      success: true,
+      data: user
     });
+
+  } catch (error) {
+    next(error);
   }
 }
 
-export async function createUser(req, res) {
+
+// CREATE USER
+export async function createUser(req, res, next) {
   try {
-    const user = await userService.createUserService(req.body);
+    const companyId = req.user.companyId;
+
+    const userData = {
+      ...req.body,
+      companyId
+    };
+
+    const user = await userService.createUserService(userData);
 
     res.status(201).json({
+      success: true,
       message: "User created successfully",
-      user
+      data: user
     });
+
   } catch (error) {
-    res.status(500).json({
-      message: error.message
-    });
+    next(error);
   }
 }
 
-export async function updateUser(req, res) {
+
+// UPDATE USER
+export async function updateUser(req, res, next) {
   try {
+    const companyId = req.user.companyId;
+    const id = req.params.id;
+
     const updatedUser = await userService.updateUserService(
-      req.params.id,
-      req.body
+      id,
+      req.body,
+      companyId
     );
 
     if (!updatedUser) {
       return res.status(404).json({
+        success: false,
         message: "User not found"
       });
     }
 
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser
     });
+
+  } catch (error) {
+    next(error);
   }
 }
 
-export async function deleteUser(req, res) {
+
+// DELETE USER
+export async function deleteUser(req, res, next) {
   try {
-    const deleted = await userService.deleteUserService(req.params.id);
+    const companyId = req.user.companyId;
+    const id = req.params.id;
+
+    const deleted = await userService.deleteUserService(id, companyId);
 
     if (!deleted) {
       return res.status(404).json({
+        success: false,
         message: "User not found"
       });
     }
 
-    res.json({
+    res.status(200).json({
+      success: true,
       message: "User deleted successfully"
     });
+
   } catch (error) {
-    res.status(500).json({
-      message: error.message
-    });
+    next(error);
   }
 }

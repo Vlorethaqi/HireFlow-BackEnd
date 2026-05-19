@@ -1,14 +1,24 @@
-export function loggerMiddleware(req, res, next) {
+export function loggerMiddleware(
+  req,
+  res,
+  next
+) {
 
-  const time = new Date().toISOString();
+  const start = Date.now();
 
-  const idPart = req.params.id
-    ? `| ID: ${req.params.id}`
-    : "";
+  res.on("finish", () => {
 
-  console.log(
-    `[${time}] ${req.method} ${req.originalUrl} ${idPart}`
-  );
+    const duration =
+      Date.now() - start;
+
+    console.log(
+      `[${new Date().toISOString()}] ` +
+      `${req.method} ` +
+      `${req.originalUrl} ` +
+      `${res.statusCode} - ` +
+      `${duration}ms`
+    );
+  });
 
   next();
 }

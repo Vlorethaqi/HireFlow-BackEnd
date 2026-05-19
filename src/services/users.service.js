@@ -1,19 +1,55 @@
-import User from "../models/users.js";
+import User from "../models/User.js";
 
-export async function getAllUsersService() {
-  return await User.findAll();
+
+// GET ALL USERS
+export async function getAllUsersService(companyId) {
+  return await User.findAll({
+    where: {
+      companyId
+    }
+  });
 }
 
-export async function getUserByIdService(id) {
-  return await User.findByPk(id);
+
+// GET USER BY ID
+export async function getUserByIdService(id, companyId) {
+  return await User.findOne({
+    where: {
+      id,
+      companyId
+    }
+  });
 }
 
+
+// CREATE USER
 export async function createUserService(data) {
+
+  const existingUser = await User.findOne({
+    where: {
+      email: data.email
+    }
+  });
+
+  if (existingUser) {
+    const error = new Error("Email already exists");
+    error.statusCode = 409;
+    throw error;
+  }
+
   return await User.create(data);
 }
 
-export async function updateUserService(id, data) {
-  const user = await User.findByPk(id);
+
+// UPDATE USER
+export async function updateUserService(id, data, companyId) {
+
+  const user = await User.findOne({
+    where: {
+      id,
+      companyId
+    }
+  });
 
   if (!user) return null;
 
@@ -22,11 +58,20 @@ export async function updateUserService(id, data) {
   return user;
 }
 
-export async function deleteUserService(id) {
-  const user = await User.findByPk(id);
+
+// DELETE USER (SOFT DELETE)
+export async function deleteUserService(id, companyId) {
+
+  const user = await User.findOne({
+    where: {
+      id,
+      companyId
+    }
+  });
 
   if (!user) return null;
 
+  // recommended: soft delete
   await user.destroy();
 
   return true;
