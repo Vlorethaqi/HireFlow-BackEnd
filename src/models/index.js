@@ -8,6 +8,7 @@ import JobSkill from "./JobSkill.js";
 import CandidateProfile from "./CandidateProfile.js";
 import ApplicationStatus from "./ApplicationStatus.js";
 import CandidateSkill from "./CandidateSkill.js";
+import Application from "./Application.js";
 
 
 Company.hasMany(User, {
@@ -60,6 +61,21 @@ CandidateSkill.belongsTo(Skill, {
     foreignKey: "skillId",
 });
 
+ApplicationStatus.hasMany(Application, { foreignKey: 'statusId' });
+Application.belongsTo(ApplicationStatus, { foreignKey: 'statusId' });
+
+
+CandidateProfile.hasMany(Application, { foreignKey: 'candidateProfileId' });
+Application.belongsTo(CandidateProfile, { foreignKey: 'candidateProfileId' });
+
+
+Job.hasMany(Application, { foreignKey: 'jobId' });
+Application.belongsTo(Job, { foreignKey: 'jobId' });
+
+
+Company.hasMany(Application, { foreignKey: 'companyId' });
+Application.belongsTo(Company, { foreignKey: 'companyId' });
+
 
 
 export {
@@ -67,4 +83,5 @@ export {
     Company,
      CandidateProfile,
      ApplicationStatus,
+     Application,
 };

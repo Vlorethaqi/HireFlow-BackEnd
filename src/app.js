@@ -5,6 +5,7 @@ import userRoutes from "./routes/userRoutes.js";  //marrim routes qe kemi
 import companyRoutes from "./routes/companyRoutes.js";
 import candidateProfileRoutes from "./routes/candidateProfiles.js";
 import applicationStatusRoutes from "./routes/applicationStatusRoutes.js";
+import candidateSkillRoutes from "./routes/candidateSkillRoutes.js";
 
 const app = express();  
 
@@ -16,6 +17,8 @@ app.use("/users", userRoutes);  //krejt requst-at qe fillojne me users mi dergu 
 app.use("/companies", companyRoutes);
 app.use("/candidate-profiles", candidateProfileRoutes);
 app.use("/application-statuses", applicationStatusRoutes);
+app.use("/users", userRoutes);
+app.use("/candidate-skills", candidateSkillRoutes);
 
 
 //kjo me posht vetem me testu kur e hapim url me get a po funksionon edhe a po na kthehet mesazhi 
