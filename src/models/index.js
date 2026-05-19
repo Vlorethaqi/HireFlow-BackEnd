@@ -1,4 +1,4 @@
-import User from "./User.js";
+import User from "./users.js";
 import Company from "./Company.js";
 import Job from "./Job.js";
 import Department from "./Department.js";
@@ -81,6 +81,7 @@ Application.belongsTo(Company, { foreignKey: 'companyId' });
 export {
     User,
     Company,
+    Job,
      CandidateProfile,
      ApplicationStatus,
      Application,

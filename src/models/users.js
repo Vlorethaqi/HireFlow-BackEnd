@@ -2,7 +2,7 @@ import { DataTypes } from "sequelize";  //importojme tipet e kolonave
 import sequelize from "../config/db.js"; //bejme lidhjen me db permes sequelize
 
 //krijimi i modelit
-const User = sequelize.define("User", { 
+const User = sequelize.define("Users", { 
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
