@@ -1,44 +1,76 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-const Job = sequelize.define("Job", {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
+const Job = sequelize.define(
+  "Job",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
 
-  title: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true
+      }
+    },
 
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: false
-  },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
 
-  location: {
-    type: DataTypes.STRING
-  },
+    location: {
+      type: DataTypes.STRING
+    },
 
-  salary: {
-    type: DataTypes.FLOAT
-  },
+    salaryMin: {
+      type: DataTypes.FLOAT
+    },
 
-  status: {
-    type: DataTypes.ENUM("OPEN", "CLOSED"),
-    defaultValue: "OPEN"
-  },
+    salaryMax: {
+      type: DataTypes.FLOAT
+    },
 
-  companyId: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
+    employmentType: {
+      type: DataTypes.ENUM(
+        "FULL_TIME",
+        "PART_TIME",
+        "INTERNSHIP",
+        "CONTRACT"
+      ),
+      allowNull: false
+    },
 
-  departmentId: {
-    type: DataTypes.INTEGER
+    status: {
+      type: DataTypes.ENUM("OPEN", "CLOSED"),
+      defaultValue: "OPEN"
+    },
+
+    deadline: {
+      type: DataTypes.DATE
+    },
+
+    companyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+
+    departmentId: {
+      type: DataTypes.INTEGER
+    }
+  },
+  {
+    timestamps: true,
+    indexes: [
+      { fields: ["title"] },
+      { fields: ["location"] },
+      { fields: ["status"] }
+    ]
   }
-});
+);
 
 export default Job;
