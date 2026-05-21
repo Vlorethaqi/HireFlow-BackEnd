@@ -11,6 +11,9 @@ const Company = sequelize.define("Company", {
     name: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+            notEmpty: true,
+        },
     },
 
     description: {
@@ -20,8 +23,11 @@ const Company = sequelize.define("Company", {
 
     email: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         unique: true,
+        validate: {
+            isEmail: true,
+        },
     },
 
     phone: {
@@ -38,6 +44,8 @@ const Company = sequelize.define("Company", {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
+}, {
+    timestamps: true,
 });
 
 export default Company;

@@ -1,4 +1,5 @@
-import User from "../models/User.js";
+import { User } from "../models/index.js";
+import bcrypt from "bcrypt";
 
 
 // GET ALL USERS
@@ -24,6 +25,11 @@ export async function getUserByIdService(id, companyId) {
 
 // CREATE USER
 export async function createUserService(data) {
+  if (!data.password) {
+    const error = new Error("Password is required");
+    error.statusCode = 400;
+    throw error;
+  }
 
   const existingUser = await User.findOne({
     where: {
@@ -37,7 +43,16 @@ export async function createUserService(data) {
     throw error;
   }
 
-  return await User.create(data);
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+
+  const user = await User.create({
+    ...data,
+    password: hashedPassword
+  });
+
+  const { password: _, ...safeUser } = user.toJSON();
+
+  return safeUser;
 }
 
 
