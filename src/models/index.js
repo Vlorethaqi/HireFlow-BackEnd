@@ -1,7 +1,7 @@
 import User from "./User.js";
 import Company from "./Company.js";
-import Job from "./Job.js";
 import Department from "./Department.js";
+import Job from "./Job.js";
 import JobRequirement from "./JobRequirement.js";
 import Skill from "./Skill.js";
 import JobSkill from "./JobSkill.js";
@@ -57,18 +57,46 @@ CandidateProfile.belongsTo(User, {
     foreignKey: "userId",
 });
 
-Department.hasMany(Job);
-Job.belongsTo(Department);
+Company.hasMany(Department, {
+    foreignKey: "companyId",
+});
 
-Job.hasMany(JobRequirement);
-JobRequirement.belongsTo(Job);
+Department.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
+Company.hasMany(Job, {
+    foreignKey: "companyId",
+});
+
+Job.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
+Department.hasMany(Job, {
+    foreignKey: "departmentId",
+});
+
+Job.belongsTo(Department, {
+    foreignKey: "departmentId",
+});
+
+Job.hasMany(JobRequirement, {
+    foreignKey: "jobId",
+});
+
+JobRequirement.belongsTo(Job, {
+    foreignKey: "jobId",
+});
 
 Job.belongsToMany(Skill, {
     through: JobSkill,
+    foreignKey: "jobId",
 });
 
 Skill.belongsToMany(Job, {
     through: JobSkill,
+    foreignKey: "skillId",
 });
 
 CandidateProfile.hasMany(CandidateSkill, {
@@ -125,8 +153,8 @@ export {
     Role,
     Permission,
     RolePermission,
-    Job,
     Department,
+    Job,
     JobRequirement,
     Skill,
     JobSkill,
