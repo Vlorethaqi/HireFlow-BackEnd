@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-const Company = sequelize.define("Company", {
+const Role = sequelize.define("Role", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -21,23 +21,9 @@ const Company = sequelize.define("Company", {
         allowNull: true,
     },
 
-    email: {
-        type: DataTypes.STRING,
+    companyId: {
+        type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true,
-        validate: {
-            isEmail: true,
-        },
-    },
-
-    phone: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-
-    location: {
-        type: DataTypes.STRING,
-        allowNull: true,
     },
 
     isActive: {
@@ -48,4 +34,4 @@ const Company = sequelize.define("Company", {
     timestamps: true,
 });
 
-export default Company;
+export default Role;

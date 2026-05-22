@@ -1,0 +1,59 @@
+"use strict";
+
+async function tableExists(queryInterface, tableName) {
+  const tables = await queryInterface.showAllTables();
+  return tables.includes(tableName);
+}
+
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    if (await tableExists(queryInterface, "Companies")) return;
+
+    await queryInterface.createTable("Companies", {
+      id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      description: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      phone: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      location: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      isActive: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn("NOW"),
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn("NOW"),
+      },
+    });
+  },
+
+  async down(queryInterface) {
+    await queryInterface.dropTable("Companies");
+  },
+};

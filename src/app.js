@@ -1,24 +1,35 @@
-import express from "express"; //krijojme server api
-import cors from "cors";  //me leju komunikim me frontend(react)
+import express from "express";
+import cors from "cors";
+
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
-import userRoutes from "./routes/userRoutes.js";  //marrim routes qe kemi
+import { errorHandler } from "./middlewares/errorMiddleware.js";
+
+import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/userRoutes.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import candidateProfileRoutes from "./routes/candidateProfiles.js";
 
-const app = express();  
+const app = express();
 
-//ky file ka me pranu request ka me i dergu te routes edhe ka me kthy respond
-app.use(cors()); //na lejon me lexu request nga fronti(react), me vone e bejme me front 
-app.use(express.json()); //me leju me lexu json body
+app.use(cors());
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); // extra safety
+
 app.use(loggerMiddleware);
-app.use("/users", userRoutes);  //krejt requst-at qe fillojne me users mi dergu ne userRoutes
+
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
 app.use("/companies", companyRoutes);
 app.use("/candidate-profiles", candidateProfileRoutes);
 
-
-//kjo me posht vetem me testu kur e hapim url me get a po funksionon edhe a po na kthehet mesazhi 
 app.get("/", (req, res) => {
-  res.json({ message: "HireFlow API is working" });
+  res.status(200).json({
+    success: true,
+    message: "HireFlow API is working"
+  });
 });
+
+// ERROR HANDLER (LAST)
+app.use(errorHandler);
 
 export default app;
