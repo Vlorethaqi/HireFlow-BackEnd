@@ -13,6 +13,7 @@ import candidateSkillRoutes from "./routes/candidateSkillRoutes.js";
 import savedJobRoutes from "./routes/savedJobRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import { setupSwagger } from "./swagger/swagger.js";
+import applicationReviewRoutes from "./routes/applicationReviewRoutes.js";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/application-statuses", applicationStatusRoutes);
 app.use("/candidate-skills", candidateSkillRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
 app.use("/jobs", jobRoutes);
+app.use("/application-reviews", applicationReviewRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
