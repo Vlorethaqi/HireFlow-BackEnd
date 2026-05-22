@@ -16,6 +16,7 @@ import { setupSwagger } from "./swagger/swagger.js";
 import applicationReviewRoutes from "./routes/applicationReviewRoutes.js";
 import applicationResponseRoutes from "./routes/applicationResponseRoutes.js";
 import applicationDocumentRoutes from "./routes/applicationDocumentRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/jobs", jobRoutes);
 app.use("/application-reviews", applicationReviewRoutes);
 app.use("/application-responses", applicationResponseRoutes);
 app.use("/application-documents", applicationDocumentRoutes);
+app.use("/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
