@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-import { Company, User } from "../models/index.js";
+import { Company, Role, User } from "../models/index.js";
 
 function createToken(user) {
     return jwt.sign(
@@ -43,7 +43,6 @@ export async function getCompanyByIdService(id, companyId) {
     return await Company.findByPk(companyId);
 }
 
-// CREATE COMPANY + ADMIN USER
 export async function createCompanyService(data) {
     const {
         name,
@@ -88,9 +87,11 @@ export async function createCompanyService(data) {
     });
 
     if (existingUser) {
-        const error = new Error("Admin email already exists");
-        error.statusCode = 409;
-        throw error;
+        if (existingUser.companyId) {
+            const error = new Error("Admin email already belongs to another company");
+            error.statusCode = 409;
+            throw error;
+        }
     }
 
     const company = await Company.create({
@@ -101,15 +102,47 @@ export async function createCompanyService(data) {
         description,
     });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const roles = await Role.bulkCreate([
+        {
+            name: "ADMIN",
+            description: "Company administrator",
+            companyId: company.id,
+        },
+        {
+            name: "HR",
+            description: "Human resources user",
+            companyId: company.id,
+        },
+        {
+            name: "WORKER",
+            description: "Company worker",
+            companyId: company.id,
+        },
+    ]);
 
-    const admin = await User.create({
-        name: adminName,
-        email: adminEmail,
-        password: hashedPassword,
-        role: "ADMIN",
-        companyId: company.id,
-    });
+    const adminRole = roles.find((role) => role.name === "ADMIN");
+    let admin = existingUser;
+
+    if (admin) {
+        await admin.update({
+            name: adminName || admin.name,
+            role: "ADMIN",
+            roleId: adminRole.id,
+            companyId: company.id,
+            isActive: true,
+        });
+    } else {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        admin = await User.create({
+            name: adminName,
+            email: adminEmail,
+            password: hashedPassword,
+            role: "ADMIN",
+            roleId: adminRole.id,
+            companyId: company.id,
+        });
+    }
 
     return {
         company,
@@ -118,7 +151,6 @@ export async function createCompanyService(data) {
     };
 }
 
-// UPDATE COMPANY
 export async function updateCompanyService(id, data, companyId) {
     const company = await getCompanyByIdService(id, companyId);
 
@@ -138,7 +170,6 @@ export async function updateCompanyService(id, data, companyId) {
     return company;
 }
 
-// DELETE COMPANY (SOFT DELETE)
 export async function deleteCompanyService(id, companyId) {
     const company = await getCompanyByIdService(id, companyId);
 

@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import { Role, User } from "../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -23,12 +23,26 @@ export async function registerService(data) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  let roleId = null;
+  const userRole = role || "CANDIDATE";
+
+  if (companyId) {
+    const savedRole = await Role.findOne({
+      where: {
+        name: userRole,
+        companyId
+      }
+    });
+
+    roleId = savedRole?.id || null;
+  }
 
   const user = await User.create({
     name,
     email,
     password: hashedPassword,
-    role: role || "CANDIDATE",
+    role: userRole,
+    roleId,
     companyId
   });
 
