@@ -6,6 +6,8 @@ import JobRequirement from "./JobRequirement.js";
 import Skill from "./Skill.js";
 import JobSkill from "./JobSkill.js";
 import Role from "./Role.js";
+import Permission from "./Permission.js";
+import RolePermission from "./RolePermission.js";
 
 Company.hasMany(User, {
     foreignKey: "companyId",
@@ -31,10 +33,22 @@ User.belongsTo(Role, {
     foreignKey: "roleId",
 });
 
+Role.belongsToMany(Permission, {
+    through: RolePermission,
+    foreignKey: "roleId",
+});
+
+Permission.belongsToMany(Role, {
+    through: RolePermission,
+    foreignKey: "permissionId",
+});
+
 export {
     User,
     Company,
     Role,
+    Permission,
+    RolePermission,
 };
 Department.hasMany(Job);
 Job.belongsTo(Department);

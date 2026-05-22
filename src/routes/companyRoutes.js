@@ -9,7 +9,7 @@ import {
     deleteCompany,
 } from "../controllers/company.controllers.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
-import { authorizeRoles } from "../middlewares/roleMiddleware.js";
+import { authorizePermission } from "../middlewares/permissionMiddleware.js";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.post("/", createCompany);
 router.get(
     "/",
     authMiddleware,
-    authorizeRoles("ADMIN"),
+    authorizePermission("company:manage"),
     getCompanies
 );
 
@@ -31,21 +31,21 @@ router.get(
 router.get(
     "/:id",
     authMiddleware,
-    authorizeRoles("ADMIN"),
+    authorizePermission("company:manage"),
     getCompanyById
 );
 
 router.put(
     "/:id",
     authMiddleware,
-    authorizeRoles("ADMIN"),
+    authorizePermission("company:manage"),
     updateCompany
 );
 
 router.delete(
     "/:id",
     authMiddleware,
-    authorizeRoles("ADMIN"),
+    authorizePermission("company:manage"),
     deleteCompany
 );
 

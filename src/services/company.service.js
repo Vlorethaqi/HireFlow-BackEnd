@@ -1,7 +1,13 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-import { Company, Role, User } from "../models/index.js";
+import {
+    Company,
+    Permission,
+    Role,
+    RolePermission,
+    User,
+} from "../models/index.js";
 
 function createToken(user) {
     return jwt.sign(
@@ -18,6 +24,73 @@ function createToken(user) {
 function removePassword(user) {
     const { password, ...safeUser } = user.toJSON();
     return safeUser;
+}
+
+async function createDefaultPermissions(roles) {
+    const permissionData = [
+        {
+            name: "users:manage",
+            description: "Manage company users",
+        },
+        {
+            name: "company:manage",
+            description: "Manage company profile",
+        },
+        {
+            name: "jobs:manage",
+            description: "Manage jobs",
+        },
+        {
+            name: "applications:review",
+            description: "Review job applications",
+        },
+        {
+            name: "jobs:view",
+            description: "View jobs",
+        },
+    ];
+
+    const permissions = [];
+
+    for (const item of permissionData) {
+        const [permission] = await Permission.findOrCreate({
+            where: {
+                name: item.name,
+            },
+            defaults: item,
+        });
+
+        permissions.push(permission);
+    }
+
+    const adminRole = roles.find((role) => role.name === "ADMIN");
+    const hrRole = roles.find((role) => role.name === "HR");
+    const workerRole = roles.find((role) => role.name === "WORKER");
+
+    const adminPermissions = permissions;
+    const hrPermissions = permissions.filter((permission) =>
+        ["jobs:manage", "applications:review", "jobs:view"].includes(permission.name)
+    );
+    const workerPermissions = permissions.filter((permission) =>
+        ["jobs:view"].includes(permission.name)
+    );
+
+    const rolePermissions = [
+        ...adminPermissions.map((permission) => ({
+            roleId: adminRole.id,
+            permissionId: permission.id,
+        })),
+        ...hrPermissions.map((permission) => ({
+            roleId: hrRole.id,
+            permissionId: permission.id,
+        })),
+        ...workerPermissions.map((permission) => ({
+            roleId: workerRole.id,
+            permissionId: permission.id,
+        })),
+    ];
+
+    await RolePermission.bulkCreate(rolePermissions);
 }
 
 // GET COMPANIES
@@ -119,6 +192,8 @@ export async function createCompanyService(data) {
             companyId: company.id,
         },
     ]);
+
+    await createDefaultPermissions(roles);
 
     const adminRole = roles.find((role) => role.name === "ADMIN");
     let admin = existingUser;

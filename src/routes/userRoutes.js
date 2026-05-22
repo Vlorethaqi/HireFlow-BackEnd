@@ -8,41 +8,43 @@ import {
 } from "../middlewares/authMiddleware.js";
 
 import {
-  authorizeRoles
-} from "../middlewares/roleMiddleware.js";
+  authorizePermission
+} from "../middlewares/permissionMiddleware.js";
 
 const router = express.Router();
 
 router.get(
   "/",
   authMiddleware,
-  authorizeRoles("ADMIN", "HR"),
+  authorizePermission("users:manage"),
   userController.getAllUsers
 );
 
 router.get(
   "/:id",
   authMiddleware,
+  authorizePermission("users:manage"),
   userController.getUserById
 );
 
 router.post(
   "/",
   authMiddleware,
-  authorizeRoles("ADMIN"),
+  authorizePermission("users:manage"),
   userController.createUser
 );
 
 router.put(
   "/:id",
   authMiddleware,
+  authorizePermission("users:manage"),
   userController.updateUser
 );
 
 router.delete(
   "/:id",
   authMiddleware,
-  authorizeRoles("ADMIN"),
+  authorizePermission("users:manage"),
   userController.deleteUser
 );
 
