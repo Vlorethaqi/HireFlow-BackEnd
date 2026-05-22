@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js"; // Importon lidhjen direkte me DB si te modelet e tjera
+import sequelize from "../config/db.js"; 
 
 const Application = sequelize.define('Application', {
     id: {
@@ -10,20 +10,24 @@ const Application = sequelize.define('Application', {
     },
     userId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Users', key: 'id' } // 🌟 Shtohet referenca e pastër
     },
     jobId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: { model: 'Jobs', key: 'id' }  // 🌟 Shtohet referenca e pastër
     },
     statusId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 1 // Default: 1 (psh. 'Applied')
+        defaultValue: 1, // Default: 1 (psh. 'Applied')
+        references: { model: 'ApplicationStatuses', key: 'id' } // 🌟 Shtohet referenca e pastër pa defaultValue brenda saj
     },
     companyId: {
         type: DataTypes.INTEGER,
-        allowNull: false // Multi-Tenancy
+        allowNull: false, 
+        references: { model: 'Companies', key: 'id' } // 🌟 Shtohet referenca e pastër
     },
     coverLetter: {
         type: DataTypes.TEXT,
@@ -38,12 +42,6 @@ const Application = sequelize.define('Application', {
     tableName: 'Applications'
 });
 
-// Lidhjet (References)
-Application.associate = (models) => {
-    Application.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-    Application.belongsTo(models.Job, { foreignKey: 'jobId', as: 'job' });
-    Application.belongsTo(models.ApplicationStatus, { foreignKey: 'statusId', as: 'status' });
-    Application.belongsTo(models.Company, { foreignKey: 'companyId', as: 'company' });
-};
+// 🔥 U hoq blloku 'Application.associate' sepse ju i keni lidhjet manuale te index.js
 
 export default Application;

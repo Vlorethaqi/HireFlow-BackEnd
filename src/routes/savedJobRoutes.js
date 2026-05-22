@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import * as savedJobController from '../controllers/savedJobController.js'; 
+
 const router = express.Router();
-const savedJobController = require('../controllers/savedJobController');
 
-
+// Dokumentimi i Swagger u hoq përkohësisht që të mos bëjë crash serveri
 router.post('/', savedJobController.saveJob); 
 router.get('/user/:userId', savedJobController.getSavedJobs); 
 router.delete('/:id', savedJobController.unsaveJob); 
 
-module.exports = router;
+export default router;

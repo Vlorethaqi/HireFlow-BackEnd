@@ -1,14 +1,14 @@
-const Application = require('../models/Application');
-const CandidateProfile = require('../models/CandidateProfile');
-const ApplicationStatus = require('../models/ApplicationStatus');
+import Application from '../models/Application.js';
+import CandidateProfile from '../models/CandidateProfile.js';
+import ApplicationStatus from '../models/ApplicationStatus.js';
 
-
-exports.applyToJob = async (req, res) => {
+// Krijimi i aplikimit të ri
+export const applyToJob = async (req, res) => {
     try {
         const userId = req.user.id; 
         const { jobId, companyId, coverLetter } = req.body; 
 
-      
+        // Kontrollo nëse kandidati ka krijuar profil
         const profile = await CandidateProfile.findOne({ where: { userId } });
         if (!profile) {
             return res.status(400).json({ 
@@ -17,7 +17,7 @@ exports.applyToJob = async (req, res) => {
             });
         }
 
-     
+        // Kontrollo nëse ka aplikuar më parë për këtë punë
         const alreadyApplied = await Application.findOne({
             where: { candidateProfileId: profile.id, jobId }
         });
@@ -28,12 +28,13 @@ exports.applyToJob = async (req, res) => {
             });
         }
 
-        // Krijimi i aplikimit të ri
+        // Krijimi i aplikimit të ri në sistemin Multi-Tenant
         const newApplication = await Application.create({
             candidateProfileId: profile.id,
             jobId,
-            companyId, // Kyçja në sistemin Multi-Tenant
-            coverLetter
+            companyId, 
+            coverLetter,
+            statusId: 1 // Sugjerim: Mund t'i vendosni një status fillestar default (p.sh. 1 = "Applied")
         });
 
         res.status(201).json({
@@ -46,7 +47,8 @@ exports.applyToJob = async (req, res) => {
     }
 };
 
-exports.getMyApplications = async (req, res) => {
+// Marrja e aplikimeve të mia (Për kandidatin)
+export const getMyApplications = async (req, res) => {
     try {
         const userId = req.user.id;
 
@@ -54,7 +56,6 @@ exports.getMyApplications = async (req, res) => {
         if (!profile) {
             return res.status(404).json({ success: false, message: "Profili nuk u gjet." });
         }
-
 
         const applications = await Application.findAll({
             where: { candidateProfileId: profile.id },
@@ -67,7 +68,8 @@ exports.getMyApplications = async (req, res) => {
     }
 };
 
-exports.getCompanyApplications = async (req, res) => {
+// Marrja e aplikimeve të kompanisë (Për HR / Menaxherin)
+export const getCompanyApplications = async (req, res) => {
     try {
         const companyId = req.user.companyId; 
 
@@ -75,7 +77,6 @@ exports.getCompanyApplications = async (req, res) => {
             where: { companyId },
             include: [
                 { model: ApplicationStatus, attributes: ['name'] }
-
             ]
         });
 
@@ -85,14 +86,14 @@ exports.getCompanyApplications = async (req, res) => {
     }
 };
 
-
-exports.updateStatus = async (req, res) => {
+// Përditësimi i statusit (Nga HR - p.sh. "Intervistohet", "Pranohet", "Refuzohet")
+export const updateStatus = async (req, res) => {
     try {
         const companyId = req.user.companyId; 
         const { id } = req.params; 
         const { statusId } = req.body; 
 
-
+        // Sigurohet izolimi Multi-Tenant (vetëm kompania e vet mund ta përditësojë)
         const application = await Application.findOne({ where: { id, companyId } });
         
         if (!application) {

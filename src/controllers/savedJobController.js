@@ -1,73 +1,50 @@
-const { SavedJob, Job } = require('../models');
+// 🌟 RREGULLIMI: Importohen të dyja si "Named Exports" nga fajlli qendror index.js
+import { SavedJob, Job } from '../models/index.js'; 
 
-exports.saveJob = async (req, res) => {
-  try {
-    const { userId, jobId } = req.body;
-    const companyId = req.headers['x-company-id']; 
+// Ruaj një punë (Save Job)
+export const saveJob = async (req, res) => {
+    try {
+        const { userId, jobId } = req.body;
 
-    if (!companyId) {
-      return res.status(400).json({ success: false, message: "Kompani ID (Tenant) mungon!" });
-    }
-
-  
-    const existingSavedJob = await SavedJob.findOne({
-      where: { userId, jobId, companyId }
-    });
-
-    if (existingSavedJob) {
-      return res.status(400).json({ success: false, message: "Këtë punë e keni ruajtur më parë!" });
-    }
-
-    const savedJob = await SavedJob.create({
-      userId,
-      jobId,
-      companyId
-    });
-
-    res.status(201).json({ success: true, message: "Puna u ruajt me sukses!", data: savedJob });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-
-exports.getSavedJobs = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const companyId = req.headers['x-company-id'];
-
-    const savedJobs = await SavedJob.findAll({
-      where: { userId, companyId },
-      include: [
-        {
-          model: Job,
-          as: 'job', 
-          attributes: ['id', 'title', 'description', 'location'] 
+        const alreadySaved = await SavedJob.findOne({ where: { userId, jobId } });
+        if (alreadySaved) {
+            return res.status(400).json({ success: false, message: "Kjo pozitë pune është ruajtur tashmë." });
         }
-      ]
-    });
 
-    res.status(200).json({ success: true, data: savedJobs });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+        const savedJob = await SavedJob.create({ userId, jobId });
+        res.status(201).json({ success: true, data: savedJob });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 };
 
-exports.unsaveJob = async (req, res) => {
-  try {
-    const { id } = req.params; 
-    const companyId = req.headers['x-company-id'];
+// Merr punët e ruajtura për një përdorues
+export const getSavedJobs = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const savedJobs = await SavedJob.findAll({
+            where: { userId }
+        });
 
-    const deleted = await SavedJob.destroy({
-      where: { id, companyId }
-    });
-
-    if (!deleted) {
-      return res.status(404).json({ success: false, message: "Puna e ruajtur nuk u gjet!" });
+        res.status(200).json({ success: true, data: savedJobs });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
+};
 
-    res.status(200).json({ success: true, message: "Puna u hoq nga lista e të ruajturave!" });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+// Hiq punën nga të ruajturat (Unsave)
+export const unsaveJob = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const savedJob = await SavedJob.findByPk(id);
+
+        if (!savedJob) {
+            return res.status(404).json({ success: false, message: "Puna e ruajtur nuk u gjet." });
+        }
+
+        await savedJob.destroy();
+        res.status(200).json({ success: true, message: "Puna u hoq nga të ruajturat me sukses." });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 };

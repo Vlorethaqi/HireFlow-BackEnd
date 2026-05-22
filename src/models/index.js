@@ -9,6 +9,7 @@ import CandidateProfile from "./CandidateProfile.js";
 import ApplicationStatus from "./ApplicationStatus.js";
 import CandidateSkill from "./CandidateSkill.js";
 import Application from "./Application.js";
+import SavedJob from "./SavedJob.js";
 
 
 Company.hasMany(User, {
@@ -85,4 +86,5 @@ export {
      CandidateProfile,
      ApplicationStatus,
      Application,
+     SavedJob,
 };

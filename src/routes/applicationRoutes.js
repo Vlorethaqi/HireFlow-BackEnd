@@ -1,19 +1,18 @@
-const express = require('express');
+import express from 'express';
+import { getAllStatuses } from '../controllers/applicationStatusController.js';
+
 const router = express.Router();
-const applicationController = require('../controllers/applicationController');
 
-const { authenticateJWT } = require('../middleware/auth');
-const { restrictTo } = require('../middleware/roles');
+/**
+ * @swagger
+ * /api/application-statuses:
+ * get:
+ * summary: "Merr listen e te gjitha statuseve"
+ * tags: ["Application Statuses"]
+ * responses:
+ * 200:
+ * description: "Sukses"
+ */
+router.get('/', getAllStatuses);
 
-
-router.use(authenticateJWT);
-
-
-router.post('/apply', restrictTo('CANDIDATE'), applicationController.applyToJob);
-router.get('/my-applications', restrictTo('CANDIDATE'), applicationController.getMyApplications);
-
-
-router.get('/company', restrictTo('ADMIN'), applicationController.getCompanyApplications);
-router.put('/:id/status', restrictTo('ADMIN'), applicationController.updateStatus);
-
-module.exports = router;
+export default router;

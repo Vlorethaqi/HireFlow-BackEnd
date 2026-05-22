@@ -1,97 +1,64 @@
-import { DataTypes } from 'sequelize';
+import ApplicationStatus from '../models/ApplicationStatus.js';
 
-export async function up(queryInterface, Sequelize) {
-  await queryInterface.createTable('ApplicationStatuses', {
-    id: {
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-      type: DataTypes.INTEGER
-    },
-    status_name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
+// 1. Sigurohu që shkruhet ekzaktësisht: export const getAllStatuses
+export const getAllStatuses = async (req, res) => {
+    try {
+        const statuses = await ApplicationStatus.findAll();
+        res.status(200).json({ success: true, data: statuses });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
-  });
-}
+};
 
-export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ApplicationStatuses');
-}
-
-
+export const getStatusById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const status = await ApplicationStatus.findByPk(id);
+        if (!status) {
+            return res.status(404).json({ success: false, message: "Statusi nuk u gjet." });
+        }
+        res.status(200).json({ success: true, data: status });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
 
 export const createStatus = async (req, res) => {
     try {
-
-        const status = await ApplicationStatus.create(req.body);
-
-        res.status(201).json(status);
-
+        const { name } = req.body;
+        const newStatus = await ApplicationStatus.create({ name });
+        res.status(201).json({ success: true, data: newStatus });
     } catch (error) {
-
-        res.status(500).json({
-            message: error.message,
-        });
+        res.status(500).json({ success: false, error: error.message });
     }
 };
-
-
 
 export const updateStatus = async (req, res) => {
     try {
-
-        const status = await ApplicationStatus.findByPk(req.params.id);
-
+        const { id } = req.params;
+        const { name } = req.body;
+        const status = await ApplicationStatus.findByPk(id);
         if (!status) {
-            return res.status(404).json({
-                message: "Status not found",
-            });
+            return res.status(404).json({ success: false, message: "Statusi nuk u gjet." });
         }
-
-        await status.update(req.body);
-
-        res.status(200).json(status);
-
+        status.name = name;
+        await status.save();
+        res.status(200).json({ success: true, data: status });
     } catch (error) {
-
-        res.status(500).json({
-            message: error.message,
-        });
+        res.status(500).json({ success: false, error: error.message });
     }
 };
 
-
-
 export const deleteStatus = async (req, res) => {
     try {
-
-        const status = await ApplicationStatus.findByPk(req.params.id);
-
+        const { id } = req.params;
+        const status = await ApplicationStatus.findByPk(id);
         if (!status) {
-            return res.status(404).json({
-                message: "Status not found",
-            });
+            return res.status(404).json({ success: false, message: "Statusi nuk u gjet." });
         }
-
         await status.destroy();
-
-        res.status(200).json({
-            message: "Status deleted successfully",
-        });
-
+        res.status(200).json({ success: true, message: "Statusi u fshi me sukses." });
     } catch (error) {
-
-        res.status(500).json({
-            message: error.message,
-        });
+        res.status(500).json({ success: false, error: error.message });
     }
 };
