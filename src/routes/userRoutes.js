@@ -48,6 +48,4 @@ router.delete(
   userController.deleteUser
 );
 
-console.log("userController:", userController);
-
 export default router;
