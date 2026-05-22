@@ -3,7 +3,9 @@ import sequelize from "./config/db.js";
 import "./models/index.js";
 import jobRoutes from "./routes/jobRoutes.js";
 
+
 app.use("/jobs", jobRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 
