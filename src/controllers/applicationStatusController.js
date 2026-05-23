@@ -1,6 +1,5 @@
 import ApplicationStatus from '../models/ApplicationStatus.js';
 
-// 1. Sigurohu që shkruhet ekzaktësisht: export const getAllStatuses
 export const getAllStatuses = async (req, res) => {
     try {
         const statuses = await ApplicationStatus.findAll();

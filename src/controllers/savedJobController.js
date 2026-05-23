@@ -1,7 +1,6 @@
-// 🌟 RREGULLIMI: Importohen të dyja si "Named Exports" nga fajlli qendror index.js
 import { SavedJob, Job } from '../models/index.js';
 
-// Ruaj një punë (Save Job)
+
 export const saveJob = async (req, res) => {
     try {
         const { userId, jobId } = req.body;
@@ -18,7 +17,7 @@ export const saveJob = async (req, res) => {
     }
 };
 
-// Merr punët e ruajtura për një përdorues
+
 export const getSavedJobs = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -32,7 +31,7 @@ export const getSavedJobs = async (req, res) => {
     }
 };
 
-// Hiq punën nga të ruajturat (Unsave)
+
 export const unsaveJob = async (req, res) => {
     try {
         const { id } = req.params;

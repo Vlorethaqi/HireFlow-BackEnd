@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.js'; // Sigurohu që rruga për te db.js është e saktë
+import sequelize from '../config/db.js'; 
 
 const SavedJob = sequelize.define('SavedJob', {
     id: {
@@ -10,17 +10,16 @@ const SavedJob = sequelize.define('SavedJob', {
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'user_id' // Përshtate nëse në databazë e keni me snake_case
+        field: 'user_id' 
     },
     jobId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'job_id' // Përshtate nëse në databazë e keni me snake_case
+        field: 'job_id' 
     }
 }, {
-    tableName: 'saved_jobs', // Emri i tabelës në databazën tuaj
+    tableName: 'saved_jobs', 
     timestamps: true
 });
 
-// 🔥 KJO ËSHTË LINJA KRITIKE QË PO MUNGON:
 export default SavedJob;

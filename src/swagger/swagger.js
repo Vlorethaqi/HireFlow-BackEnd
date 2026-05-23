@@ -27,7 +27,7 @@ const options = {
         }
       },
 
-      // === SAVED JOBS (Tani të dyja kanë /api saktësisht si te app.js) ===
+      // === SAVED JOBS ===
       "/api/saved-jobs": {
         "post": {
           "summary": "Ruaj një pozitë pune",
@@ -123,13 +123,13 @@ const options = {
       }
     }
   },
-  apis: [], // Lihet e zbrazët për të shmangur gabimet e skenimit të fajllave
+  apis: [], 
 };
 
 const swaggerSpec = swaggerJSDoc(options);
 
 export const setupSwagger = (app) => {
-  // Krijojmë rrugën për JSON-in e specifikimit që UI të furnizohet pa gabime cache-i
+
   app.get('/api-docs.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
