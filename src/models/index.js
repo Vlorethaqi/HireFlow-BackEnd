@@ -57,6 +57,14 @@ CandidateProfile.belongsTo(User, {
     foreignKey: "userId",
 });
 
+User.hasMany(Application, {
+    foreignKey: "userId",
+});
+
+Application.belongsTo(User, {
+    foreignKey: "userId",
+});
+
 Company.hasMany(Department, {
     foreignKey: "companyId",
 });
@@ -145,6 +153,22 @@ Company.hasMany(Application, {
 
 Application.belongsTo(Company, {
     foreignKey: "companyId",
+});
+
+User.hasMany(SavedJob, {
+    foreignKey: "userId",
+});
+
+SavedJob.belongsTo(User, {
+    foreignKey: "userId",
+});
+
+Job.hasMany(SavedJob, {
+    foreignKey: "jobId",
+});
+
+SavedJob.belongsTo(Job, {
+    foreignKey: "jobId",
 });
 
 export {
