@@ -178,10 +178,28 @@ export const getAllJobs = async (req, res) => {
 
 export const createJob = async (req, res) => {
   try {
-    const job = await Job.create(req.body);
-    res.status(201).json(job);
+    const companyId = req.user?.companyId;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Company is required to create a job.",
+      });
+    }
+
+    const job = await Job.create({
+      ...req.body,
+      companyId,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Job created successfully",
+      data: job,
+    });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
