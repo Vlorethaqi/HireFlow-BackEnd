@@ -7,7 +7,7 @@ import "./models/index.js";
 
 const PORT = process.env.PORT || 3000;
 
-sequelize.sync({ alter: true })
+sequelize.sync({ force: true })
     .then(() => {
         console.log("Database synced successfully");
 

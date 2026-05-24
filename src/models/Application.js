@@ -11,22 +11,24 @@ const Application = sequelize.define('Application', {
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: { model: 'Users', key: 'id' } // 🌟 Shtohet referenca e pastër
+        references: { model: 'Users', key: 'id' } 
     },
     jobId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: { model: 'Jobs', key: 'id' }  // 🌟 Shtohet referenca e pastër
+        references: { model: 'Jobs', key: 'id' }  
     },
     statusId: {
         type: DataTypes.INTEGER,
         allowNull: false,
 
+        defaultValue: 1, 
+        references: { model: 'ApplicationStatuses', key: 'id' } 
     },
     companyId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: { model: 'Companies', key: 'id' } // 🌟 Shtohet referenca e pastër
+        references: { model: 'Companies', key: 'id' } 
     },
     coverLetter: {
         type: DataTypes.TEXT,
@@ -41,6 +43,6 @@ const Application = sequelize.define('Application', {
     tableName: 'Applications'
 });
 
-// 🔥 U hoq blloku 'Application.associate' sepse ju i keni lidhjet manuale te index.js
+
 
 export default Application;

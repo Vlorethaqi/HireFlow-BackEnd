@@ -2,13 +2,12 @@ import Application from '../models/Application.js';
 import CandidateProfile from '../models/CandidateProfile.js';
 import ApplicationStatus from '../models/ApplicationStatus.js';
 
-// Krijimi i aplikimit të ri
+
 export const applyToJob = async (req, res) => {
     try {
         const userId = req.user.id;
         const { jobId, companyId, coverLetter } = req.body;
 
-        // Kontrollo nëse kandidati ka krijuar profil
         const profile = await CandidateProfile.findOne({ where: { userId } });
         if (!profile) {
             return res.status(400).json({
@@ -17,7 +16,7 @@ export const applyToJob = async (req, res) => {
             });
         }
 
-        // Kontrollo nëse ka aplikuar më parë për këtë punë
+   
         const alreadyApplied = await Application.findOne({
             where: { candidateProfileId: profile.id, jobId }
         });
@@ -28,13 +27,13 @@ export const applyToJob = async (req, res) => {
             });
         }
 
-        // Krijimi i aplikimit të ri në sistemin Multi-Tenant
+        
         const newApplication = await Application.create({
             candidateProfileId: profile.id,
             jobId,
             companyId,
             coverLetter,
-            statusId: 1 // Sugjerim: Mund t'i vendosni një status fillestar default (p.sh. 1 = "Applied")
+            statusId: 1 
         });
 
         res.status(201).json({
@@ -47,7 +46,7 @@ export const applyToJob = async (req, res) => {
     }
 };
 
-// Marrja e aplikimeve të mia (Për kandidatin)
+
 export const getMyApplications = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -68,7 +67,7 @@ export const getMyApplications = async (req, res) => {
     }
 };
 
-// Marrja e aplikimeve të kompanisë (Për HR / Menaxherin)
+
 export const getCompanyApplications = async (req, res) => {
     try {
         const companyId = req.user.companyId;
@@ -86,14 +85,13 @@ export const getCompanyApplications = async (req, res) => {
     }
 };
 
-// Përditësimi i statusit (Nga HR - p.sh. "Intervistohet", "Pranohet", "Refuzohet")
+
 export const updateStatus = async (req, res) => {
     try {
         const companyId = req.user.companyId;
         const { id } = req.params;
         const { statusId } = req.body;
 
-        // Sigurohet izolimi Multi-Tenant (vetëm kompania e vet mund ta përditësojë)
         const application = await Application.findOne({ where: { id, companyId } });
 
         if (!application) {
