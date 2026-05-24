@@ -123,12 +123,12 @@ CandidateSkill.belongsTo(Skill, {
     foreignKey: "skillId",
 });
 
-ApplicationStatus.hasMany(Application, {
-    foreignKey: "statusId",
+Application.belongsTo(ApplicationStatus, {
+  foreignKey: "statusId"
 });
 
-Application.belongsTo(ApplicationStatus, {
-    foreignKey: "statusId",
+ApplicationStatus.hasMany(Application, {
+  foreignKey: "statusId"
 });
 
 CandidateProfile.hasMany(Application, {

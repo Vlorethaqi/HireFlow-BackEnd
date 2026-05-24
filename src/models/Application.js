@@ -21,8 +21,7 @@ const Application = sequelize.define('Application', {
     statusId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 1, // Default: 1 (psh. 'Applied')
-        references: { model: 'ApplicationStatuses', key: 'id' } // 🌟 Shtohet referenca e pastër pa defaultValue brenda saj
+
     },
     companyId: {
         type: DataTypes.INTEGER,
