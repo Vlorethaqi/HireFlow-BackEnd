@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
-import { Department, Job, JobRequirement, JobSkill, Skill } from "../models/index.js";
+import sequelize from "../config/db.js";
+import { AuditLog, Department, Job, JobRequirement, JobSkill, Skill } from "../models/index.js";
 
 const toNumber = (value) => {
   const number = Number(value);
@@ -11,7 +12,19 @@ export const getAllJobs = async (req, res) => {
     const hasFilters = Object.keys(req.query).length > 0;
 
     if (!hasFilters) {
-      const jobs = await Job.findAll();
+      const jobs = await Job.findAll({
+        include: [
+          { model: Department, attributes: ["id", "name", "companyId"], required: false },
+          { model: JobRequirement, attributes: ["id", "requirementText", "requirementType", "isRequired"], required: false },
+          {
+            model: Skill,
+            attributes: ["id", "name", "category", "description"],
+            through: { model: JobSkill, attributes: ["importanceLevel"] },
+            required: false,
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+      });
       return res.json(jobs);
     }
 
@@ -177,6 +190,8 @@ export const getAllJobs = async (req, res) => {
 };
 
 export const createJob = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const companyId = req.user?.companyId;
 
@@ -187,17 +202,62 @@ export const createJob = async (req, res) => {
       });
     }
 
+    const { skills = [], requirements = [], ...jobData } = req.body;
+
     const job = await Job.create({
-      ...req.body,
+      ...jobData,
       companyId,
+    }, { transaction });
+
+    if (Array.isArray(skills) && skills.length) {
+      const jobSkills = skills.map((item) => ({
+        jobId: job.id,
+        skillId: typeof item === "object" ? item.skillId : item,
+        importanceLevel: typeof item === "object" ? item.importanceLevel || "REQUIRED" : "REQUIRED",
+      }));
+
+      await JobSkill.bulkCreate(jobSkills, {
+        transaction,
+        ignoreDuplicates: true,
+      });
+    }
+
+    if (Array.isArray(requirements) && requirements.length) {
+      const jobRequirements = requirements.map((item) => ({
+        jobId: job.id,
+        requirementText: typeof item === "object" ? item.requirementText : item,
+        requirementType: typeof item === "object" ? item.requirementType || "OTHER" : "OTHER",
+        isRequired: typeof item === "object" ? item.isRequired ?? true : true,
+      }));
+
+      await JobRequirement.bulkCreate(jobRequirements, { transaction });
+    }
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: "JOB_CREATED",
+      entity: "Job",
+      entityId: job.id,
+      companyId,
+      description: `Job created: ${job.title}`,
+    }, { transaction });
+
+    await transaction.commit();
+
+    const createdJob = await Job.findByPk(job.id, {
+      include: [
+        { model: JobRequirement },
+        { model: Skill, through: { model: JobSkill, attributes: ["importanceLevel"] } },
+      ],
     });
 
     res.status(201).json({
       success: true,
       message: "Job created successfully",
-      data: job,
+      data: createdJob,
     });
   } catch (error) {
+    await transaction.rollback();
     res.status(500).json({
       success: false,
       message: error.message,

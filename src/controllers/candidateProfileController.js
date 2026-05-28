@@ -1,4 +1,7 @@
 import CandidateProfile from "../models/CandidateProfile.js";
+import CandidateSkill from "../models/CandidateSkill.js";
+import Skill from "../models/Skill.js";
+import User from "../models/User.js";
 
 
 
@@ -13,6 +16,73 @@ export const getAllProfiles = async (req, res) => {
         res.status(500).json({
             message: error.message,
         });
+    }
+};
+
+export const getMyProfile = async (req, res) => {
+    try {
+        const profile = await CandidateProfile.findOne({
+            where: { userId: req.user.id },
+            include: [
+                { model: User, attributes: ["id", "name", "email"] },
+                { model: CandidateSkill, include: [{ model: Skill }] }
+            ]
+        });
+
+        res.status(200).json({ success: true, data: profile });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const upsertMyProfile = async (req, res) => {
+    try {
+        const { skills = [], ...profileData } = req.body;
+        const [profile] = await CandidateProfile.findOrCreate({
+            where: { userId: req.user.id },
+            defaults: {
+                ...profileData,
+                phone: profileData.phone || "",
+                userId: req.user.id
+            }
+        });
+
+        if (!profile.isNewRecord) {
+            await profile.update({
+                ...profileData,
+                userId: req.user.id
+            });
+        }
+
+        if (Array.isArray(skills)) {
+            await CandidateSkill.destroy({ where: { candidateProfileId: profile.id } });
+
+            const candidateSkills = skills
+                .filter((item) => item)
+                .map((item) => ({
+                    candidateProfileId: profile.id,
+                    skillId: typeof item === "object" ? item.skillId : item
+                }));
+
+            if (candidateSkills.length) {
+                await CandidateSkill.bulkCreate(candidateSkills);
+            }
+        }
+
+        const updatedProfile = await CandidateProfile.findByPk(profile.id, {
+            include: [
+                { model: User, attributes: ["id", "name", "email"] },
+                { model: CandidateSkill, include: [{ model: Skill }] }
+            ]
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Profile saved successfully",
+            data: updatedProfile
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
