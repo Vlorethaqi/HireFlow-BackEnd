@@ -196,6 +196,7 @@ export const createJob = async (req, res) => {
     const companyId = req.user?.companyId;
 
     if (!companyId) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: "Company is required to create a job.",
@@ -203,6 +204,32 @@ export const createJob = async (req, res) => {
     }
 
     const { skills = [], requirements = [], ...jobData } = req.body;
+
+    if (!Array.isArray(skills) || skills.length === 0) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "At least one required skill must be selected.",
+      });
+    }
+
+    if (jobData.departmentId) {
+      const department = await Department.findOne({
+        where: {
+          id: jobData.departmentId,
+          companyId,
+        },
+        transaction,
+      });
+
+      if (!department) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Selected department does not belong to your company.",
+        });
+      }
+    }
 
     const job = await Job.create({
       ...jobData,
