@@ -20,7 +20,7 @@ export const getCompanies = async (req, res) => {
 
 export const createCompany = async (req, res) => {
     try {
-        const result = await companyService.createCompanyService(req.body);
+        const result = await companyService.createCompanyService(req.body, req.user?.id);
 
         res.status(201).json({
             success: true,
