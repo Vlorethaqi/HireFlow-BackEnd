@@ -116,7 +116,7 @@ export async function getCompanyByIdService(id, companyId) {
     return await Company.findByPk(companyId);
 }
 
-export async function createCompanyService(data) {
+export async function createCompanyService(data, loggedUserId = null) {
     const {
         name,
         companyName,
@@ -133,9 +133,13 @@ export async function createCompanyService(data) {
     const finalCompanyName = name || companyName;
     const finalCompanyEmail = companyEmail || email;
 
-    if (!finalCompanyName || !finalCompanyEmail || !adminName || !adminEmail || !password) {
+    const loggedUser = loggedUserId ? await User.findByPk(loggedUserId) : null;
+    const finalAdminEmail = adminEmail || loggedUser?.email;
+    const finalAdminName = adminName || loggedUser?.name;
+
+    if (!finalCompanyName || !finalCompanyEmail || !finalAdminName || !finalAdminEmail || (!password && !loggedUser)) {
         const error = new Error(
-            "Company name, company email, admin name, admin email and password are required"
+            "Company name, company email and admin data are required"
         );
         error.statusCode = 400;
         throw error;
@@ -155,7 +159,7 @@ export async function createCompanyService(data) {
 
     const existingUser = await User.findOne({
         where: {
-            email: adminEmail,
+            email: finalAdminEmail,
         },
     });
 
@@ -200,7 +204,7 @@ export async function createCompanyService(data) {
 
     if (admin) {
         await admin.update({
-            name: adminName || admin.name,
+            name: finalAdminName || admin.name,
             role: "ADMIN",
             roleId: adminRole.id,
             companyId: company.id,
@@ -210,8 +214,8 @@ export async function createCompanyService(data) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         admin = await User.create({
-            name: adminName,
-            email: adminEmail,
+            name: finalAdminName,
+            email: finalAdminEmail,
             password: hashedPassword,
             role: "ADMIN",
             roleId: adminRole.id,
@@ -222,6 +226,7 @@ export async function createCompanyService(data) {
     return {
         company,
         admin: removePassword(admin),
+        user: removePassword(admin),
         token: createToken(admin),
     };
 }

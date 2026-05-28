@@ -1,7 +1,9 @@
 import express from "express";
 import Notification from "../models/Notification.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+router.use(authMiddleware);
 
 router.post("/", async (req, res) => {
   try {
@@ -14,8 +16,11 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const notifications = await Notification.findAll();
-    res.json(notifications);
+    const notifications = await Notification.findAll({
+      where: { userId: req.user.id },
+      order: [["createdAt", "DESC"]]
+    });
+    res.json({ success: true, data: notifications });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -23,11 +28,15 @@ router.get("/", async (req, res) => {
 
 router.get("/user/:userId", async (req, res) => {
   try {
+    if (Number(req.params.userId) !== Number(req.user.id)) {
+      return res.status(403).json({ success: false, message: "Permission denied" });
+    }
+
     const notifications = await Notification.findAll({
       where: { userId: req.params.userId }
     });
 
-    res.json(notifications);
+    res.json({ success: true, data: notifications });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -35,7 +44,9 @@ router.get("/user/:userId", async (req, res) => {
 
 router.put("/:id/read", async (req, res) => {
   try {
-    const notification = await Notification.findByPk(req.params.id);
+    const notification = await Notification.findOne({
+      where: { id: req.params.id, userId: req.user.id }
+    });
 
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
@@ -52,7 +63,9 @@ router.put("/:id/read", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const notification = await Notification.findByPk(req.params.id);
+    const notification = await Notification.findOne({
+      where: { id: req.params.id, userId: req.user.id }
+    });
 
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });

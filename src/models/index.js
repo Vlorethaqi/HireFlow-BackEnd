@@ -13,6 +13,11 @@ import ApplicationStatus from "./ApplicationStatus.js";
 import CandidateSkill from "./CandidateSkill.js";
 import Application from "./Application.js";
 import SavedJob from "./SavedJob.js";
+import ApplicationReview from "./ApplicationReview.js";
+import ApplicationResponse from "./ApplicationResponse.js";
+import ApplicationDocument from "./ApplicationDocument.js";
+import Notification from "./Notification.js";
+import AuditLog from "./AuditLog.js";
 
 Company.hasMany(User, {
     foreignKey: "companyId",
@@ -147,6 +152,72 @@ Application.belongsTo(Job, {
     foreignKey: "jobId",
 });
 
+Application.hasMany(ApplicationReview, {
+    foreignKey: "applicationId",
+});
+
+ApplicationReview.belongsTo(Application, {
+    foreignKey: "applicationId",
+});
+
+User.hasMany(ApplicationReview, {
+    foreignKey: "reviewerId",
+});
+
+ApplicationReview.belongsTo(User, {
+    foreignKey: "reviewerId",
+    as: "reviewer",
+});
+
+Company.hasMany(ApplicationReview, {
+    foreignKey: "companyId",
+});
+
+ApplicationReview.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
+Application.hasMany(ApplicationResponse, {
+    foreignKey: "applicationId",
+});
+
+ApplicationResponse.belongsTo(Application, {
+    foreignKey: "applicationId",
+});
+
+User.hasMany(ApplicationResponse, {
+    foreignKey: "senderId",
+});
+
+ApplicationResponse.belongsTo(User, {
+    foreignKey: "senderId",
+    as: "sender",
+});
+
+Company.hasMany(ApplicationResponse, {
+    foreignKey: "companyId",
+});
+
+ApplicationResponse.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
+Application.hasMany(ApplicationDocument, {
+    foreignKey: "applicationId",
+});
+
+ApplicationDocument.belongsTo(Application, {
+    foreignKey: "applicationId",
+});
+
+Company.hasMany(ApplicationDocument, {
+    foreignKey: "companyId",
+});
+
+ApplicationDocument.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
 Company.hasMany(Application, {
     foreignKey: "companyId",
 });
@@ -171,6 +242,38 @@ SavedJob.belongsTo(Job, {
     foreignKey: "jobId",
 });
 
+User.hasMany(Notification, {
+    foreignKey: "userId",
+});
+
+Notification.belongsTo(User, {
+    foreignKey: "userId",
+});
+
+Company.hasMany(Notification, {
+    foreignKey: "companyId",
+});
+
+Notification.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
+User.hasMany(AuditLog, {
+    foreignKey: "userId",
+});
+
+AuditLog.belongsTo(User, {
+    foreignKey: "userId",
+});
+
+Company.hasMany(AuditLog, {
+    foreignKey: "companyId",
+});
+
+AuditLog.belongsTo(Company, {
+    foreignKey: "companyId",
+});
+
 export {
     User,
     Company,
@@ -187,4 +290,9 @@ export {
     CandidateSkill,
     Application,
     SavedJob,
+    ApplicationReview,
+    ApplicationResponse,
+    ApplicationDocument,
+    Notification,
+    AuditLog,
 };
