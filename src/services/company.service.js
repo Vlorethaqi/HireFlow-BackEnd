@@ -3,11 +3,21 @@ import jwt from "jsonwebtoken";
 
 import {
     Company,
+    Department,
     Permission,
     Role,
     RolePermission,
     User,
 } from "../models/index.js";
+
+const DEFAULT_DEPARTMENTS = [
+    "Teknologji Informative",
+    "Agjent i Shitjeve",
+    "Financa",
+    "Marketing",
+    "Burime Njerezore",
+    "Operacione",
+];
 
 function createToken(user) {
     return jwt.sign(
@@ -17,7 +27,18 @@ function createToken(user) {
             companyId: user.companyId,
         },
         process.env.JWT_SECRET,
-        { expiresIn: "1d" }
+        { expiresIn: "15m" }
+    );
+}
+
+function createRefreshToken(user) {
+    return jwt.sign(
+        {
+            id: user.id,
+            tokenType: "refresh",
+        },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        { expiresIn: "7d" }
     );
 }
 
@@ -69,7 +90,7 @@ async function createDefaultPermissions(roles) {
 
     const adminPermissions = permissions;
     const hrPermissions = permissions.filter((permission) =>
-        ["jobs:manage", "applications:review", "jobs:view"].includes(permission.name)
+        ["applications:review", "jobs:view"].includes(permission.name)
     );
     const workerPermissions = permissions.filter((permission) =>
         ["jobs:view"].includes(permission.name)
@@ -90,7 +111,24 @@ async function createDefaultPermissions(roles) {
         })),
     ];
 
-    await RolePermission.bulkCreate(rolePermissions);
+    await RolePermission.bulkCreate(rolePermissions, {
+        ignoreDuplicates: true,
+    });
+}
+
+async function createDefaultDepartments(companyId) {
+    for (const name of DEFAULT_DEPARTMENTS) {
+        await Department.findOrCreate({
+            where: {
+                name,
+                companyId,
+            },
+            defaults: {
+                name,
+                companyId,
+            },
+        });
+    }
 }
 
 // GET COMPANIES
@@ -198,6 +236,7 @@ export async function createCompanyService(data, loggedUserId = null) {
     ]);
 
     await createDefaultPermissions(roles);
+    await createDefaultDepartments(company.id);
 
     const adminRole = roles.find((role) => role.name === "ADMIN");
     let admin = existingUser;
@@ -223,11 +262,15 @@ export async function createCompanyService(data, loggedUserId = null) {
         });
     }
 
+    const token = createToken(admin);
+
     return {
         company,
         admin: removePassword(admin),
         user: removePassword(admin),
-        token: createToken(admin),
+        token,
+        accessToken: token,
+        refreshToken: createRefreshToken(admin),
     };
 }
 

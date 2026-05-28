@@ -20,6 +20,13 @@ export const getCompanies = async (req, res) => {
 
 export const createCompany = async (req, res) => {
     try {
+        if (req.user?.role === "HR") {
+            return res.status(403).json({
+                success: false,
+                message: "HR users can review applications only and cannot create companies.",
+            });
+        }
+
         const result = await companyService.createCompanyService(req.body, req.user?.id);
 
         res.status(201).json({

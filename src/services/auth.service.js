@@ -2,6 +2,38 @@ import { Role, User } from "../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+function getRefreshSecret() {
+  return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+}
+
+function createAccessToken(user) {
+  return jwt.sign(
+    {
+      id: user.id,
+      role: user.role,
+      companyId: user.companyId
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+}
+
+function createRefreshToken(user) {
+  return jwt.sign(
+    {
+      id: user.id,
+      tokenType: "refresh"
+    },
+    getRefreshSecret(),
+    { expiresIn: "7d" }
+  );
+}
+
+function removePassword(user) {
+  const { password: _, ...safeUser } = user.toJSON();
+  return safeUser;
+}
+
 // REGISTER
 export async function registerService(data) {
   if (!data) {
@@ -47,9 +79,7 @@ export async function registerService(data) {
   });
 
   // mos e kthe password
-  const { password: _, ...safeUser } = user.toJSON();
-
-  return safeUser;
+  return removePassword(user);
 }
 
 
@@ -76,20 +106,52 @@ export async function loginService(email, password) {
     throw new Error("Invalid credentials");
   }
 
-  const token = jwt.sign(
-    {
-      id: user.id,
-      role: user.role,
-      companyId: user.companyId
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
-  );
-
-  const { password: _, ...safeUser } = user.toJSON();
+  const safeUser = removePassword(user);
+  const token = createAccessToken(user);
+  const refreshToken = createRefreshToken(user);
 
   return {
     user: safeUser,
-    token
+    token,
+    accessToken: token,
+    refreshToken
+  };
+}
+
+export async function refreshTokenService(refreshToken) {
+  if (!refreshToken) {
+    throw new Error("Refresh token is required");
+  }
+
+  let decoded;
+
+  try {
+    decoded = jwt.verify(refreshToken, getRefreshSecret());
+  } catch {
+    throw new Error("Invalid or expired refresh token");
+  }
+
+  if (decoded.tokenType !== "refresh") {
+    throw new Error("Invalid refresh token");
+  }
+
+  const user = await User.findByPk(decoded.id, {
+    attributes: {
+      include: ["password"]
+    }
+  });
+
+  if (!user || user.isActive === false) {
+    throw new Error("User not found or inactive");
+  }
+
+  const token = createAccessToken(user);
+  const nextRefreshToken = createRefreshToken(user);
+
+  return {
+    user: removePassword(user),
+    token,
+    accessToken: token,
+    refreshToken: nextRefreshToken
   };
 }

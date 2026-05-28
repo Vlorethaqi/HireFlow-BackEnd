@@ -40,3 +40,18 @@ export async function login(req, res, next) {
     next(error);
   }
 }
+
+export async function refresh(req, res, next) {
+  try {
+    const { refreshToken } = req.body || {};
+    const result = await authService.refreshTokenService(refreshToken);
+
+    res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
