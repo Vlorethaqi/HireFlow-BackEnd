@@ -1,12 +1,22 @@
 import Application from '../models/Application.js';
 import CandidateProfile from '../models/CandidateProfile.js';
 import ApplicationStatus from '../models/ApplicationStatus.js';
+import Job from '../models/Job.js';
+import Notification from '../models/Notification.js';
+import AuditLog from '../models/AuditLog.js';
 
 
 export const applyToJob = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { jobId, companyId, coverLetter } = req.body;
+        const { jobId, coverLetter } = req.body;
+
+        if (req.user.role !== "CANDIDATE") {
+            return res.status(403).json({
+                success: false,
+                message: "Vetem kandidatet mund te aplikojne per pune."
+            });
+        }
 
         const profile = await CandidateProfile.findOne({ where: { userId } });
         if (!profile) {
@@ -16,7 +26,14 @@ export const applyToJob = async (req, res) => {
             });
         }
 
-   
+        const job = await Job.findByPk(jobId);
+        if (!job) {
+            return res.status(404).json({
+                success: false,
+                message: "Pozita e punes nuk u gjet."
+            });
+        }
+
         const alreadyApplied = await Application.findOne({
             where: { candidateProfileId: profile.id, jobId }
         });
@@ -27,13 +44,25 @@ export const applyToJob = async (req, res) => {
             });
         }
 
+        const pendingStatus = await ApplicationStatus.findOne({ where: { name: "PENDING" } });
+
         
         const newApplication = await Application.create({
+            userId,
             candidateProfileId: profile.id,
             jobId,
-            companyId,
+            companyId: job.companyId,
             coverLetter,
-            statusId: 1 
+            statusId: pendingStatus?.id || 1 
+        });
+
+        await AuditLog.create({
+            userId,
+            action: "APPLICATION_CREATED",
+            entity: "Application",
+            entityId: newApplication.id,
+            companyId: job.companyId,
+            description: `Candidate applied for job ${job.title}`
         });
 
         res.status(201).json({
@@ -58,7 +87,10 @@ export const getMyApplications = async (req, res) => {
 
         const applications = await Application.findAll({
             where: { candidateProfileId: profile.id },
-            include: [{ model: ApplicationStatus, attributes: ['name'] }]
+            include: [
+                { model: ApplicationStatus, attributes: ['name'] },
+                { model: Job, attributes: ['id', 'title', 'location', 'employmentType'] }
+            ]
         });
 
         res.status(200).json({ success: true, data: applications });
@@ -75,7 +107,9 @@ export const getCompanyApplications = async (req, res) => {
         const applications = await Application.findAll({
             where: { companyId },
             include: [
-                { model: ApplicationStatus, attributes: ['name'] }
+                { model: ApplicationStatus, attributes: ['name'] },
+                { model: Job, attributes: ['id', 'title'] },
+                { model: CandidateProfile }
             ]
         });
 
@@ -103,6 +137,23 @@ export const updateStatus = async (req, res) => {
 
         application.statusId = statusId;
         await application.save();
+
+        await Notification.create({
+            userId: application.userId,
+            title: "Application status updated",
+            message: "Statusi i aplikimit tuaj eshte perditesuar.",
+            type: "APPLICATION",
+            companyId
+        });
+
+        await AuditLog.create({
+            userId: req.user.id,
+            action: "APPLICATION_STATUS_UPDATED",
+            entity: "Application",
+            entityId: application.id,
+            companyId,
+            description: `Application status changed to ${statusId}`
+        });
 
         res.status(200).json({
             success: true,

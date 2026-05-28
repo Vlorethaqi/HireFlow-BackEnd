@@ -1,56 +1,86 @@
 import express from "express";
-import ApplicationReview from "../models/ApplicationReview.js";
+import { Application, ApplicationReview, AuditLog } from "../models/index.js";
+import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { authorizePermission } from "../middlewares/permissionMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  try {
-    const review = await ApplicationReview.create(req.body);
-    res.json({ message: "Application review created", review });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.use(authMiddleware);
 
-router.get("/", async (req, res) => {
+router.post("/", authorizePermission("applications:review"), async (req, res) => {
   try {
-    const reviews = await ApplicationReview.findAll();
-    res.json(reviews);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-router.get("/application/:applicationId", async (req, res) => {
-  try {
-    const reviews = await ApplicationReview.findAll({
-      where: { applicationId: req.params.applicationId }
+    const application = await Application.findOne({
+      where: { id: req.body.applicationId, companyId: req.user.companyId }
     });
 
-    res.json(reviews);
+    if (!application) {
+      return res.status(404).json({ success: false, message: "Application not found" });
+    }
+
+    const review = await ApplicationReview.create({
+      ...req.body,
+      reviewerId: req.user.id,
+      companyId: req.user.companyId
+    });
+
+    await AuditLog.create({
+      userId: req.user.id,
+      action: "APPLICATION_REVIEW_CREATED",
+      entity: "ApplicationReview",
+      entityId: review.id,
+      companyId: req.user.companyId,
+      description: `Review created for application ${application.id}`
+    });
+
+    res.status(201).json({ success: true, message: "Application review created", data: review });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.get("/", authorizePermission("applications:review"), async (req, res) => {
   try {
-    const review = await ApplicationReview.findByPk(req.params.id);
+    const reviews = await ApplicationReview.findAll({ where: { companyId: req.user.companyId } });
+    res.json({ success: true, data: reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.get("/application/:applicationId", authorizePermission("applications:review"), async (req, res) => {
+  try {
+    const reviews = await ApplicationReview.findAll({
+      where: { applicationId: req.params.applicationId, companyId: req.user.companyId }
+    });
+
+    res.json({ success: true, data: reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.put("/:id", authorizePermission("applications:review"), async (req, res) => {
+  try {
+    const review = await ApplicationReview.findOne({
+      where: { id: req.params.id, companyId: req.user.companyId }
+    });
 
     if (!review) {
       return res.status(404).json({ message: "Review not found" });
     }
 
     await review.update(req.body);
-    res.json({ message: "Review updated", review });
+    res.json({ success: true, message: "Review updated", data: review });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authorizePermission("applications:review"), async (req, res) => {
   try {
-    const review = await ApplicationReview.findByPk(req.params.id);
+    const review = await ApplicationReview.findOne({
+      where: { id: req.params.id, companyId: req.user.companyId }
+    });
 
     if (!review) {
       return res.status(404).json({ message: "Review not found" });

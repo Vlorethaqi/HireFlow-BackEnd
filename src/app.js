@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import { errorHandler } from "./middlewares/errorMiddleware.js";
@@ -20,14 +22,19 @@ import applicationResponseRoutes from "./routes/applicationResponseRoutes.js";
 import applicationDocumentRoutes from "./routes/applicationDocumentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import auditLogRoutes from "./routes/auditLogRoutes.js";
+import skillRoutes from "./routes/skillRoutes.js";
+import departmentRoutes from "./routes/departmentRoutes.js";
 
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(loggerMiddleware);
+app.use(express.static(path.join(__dirname, "public")));
 
 setupSwagger(app);
 
@@ -39,8 +46,16 @@ app.use("/application-statuses", applicationStatusRoutes);
 app.use("/applications", applicationRoutes);
 app.use("/candidate-skills", candidateSkillRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
+app.use("/saved-jobs", savedJobRoutes);
 app.use("/jobs", jobRoutes);
+app.use("/skills", skillRoutes);
+app.use("/departments", departmentRoutes);
 app.use("/ai", aiRoutes);
+app.use("/application-reviews", applicationReviewRoutes);
+app.use("/application-responses", applicationResponseRoutes);
+app.use("/application-documents", applicationDocumentRoutes);
+app.use("/notifications", notificationRoutes);
+app.use("/audit-logs", auditLogRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

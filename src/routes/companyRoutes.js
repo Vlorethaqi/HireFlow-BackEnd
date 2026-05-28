@@ -1,4 +1,5 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 
 import {
     getCompanies,
@@ -13,7 +14,21 @@ import { authorizePermission } from "../middlewares/permissionMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", createCompany);
+function optionalAuth(req, _res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader?.startsWith("Bearer ")) {
+        try {
+            req.user = jwt.verify(authHeader.split(" ")[1], process.env.JWT_SECRET);
+        } catch {
+            req.user = null;
+        }
+    }
+
+    next();
+}
+
+router.post("/", optionalAuth, createCompany);
 
 router.get(
     "/",

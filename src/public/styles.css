@@ -1,0 +1,190 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, Arial, sans-serif;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #d9e2ec;
+  --fill: #f6f8fb;
+  --brand: #0f766e;
+  --accent: #b45309;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: #eef3f7;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+main {
+  width: min(1180px, calc(100% - 32px));
+  margin: 24px auto 48px;
+}
+
+button,
+input,
+select,
+textarea {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+
+button {
+  padding: 0 12px;
+  color: #fff;
+  cursor: pointer;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 9px 10px;
+  background: #fff;
+}
+
+textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+h1,
+h2 {
+  margin: 0 0 16px;
+}
+
+.panel,
+.card {
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.formGrid textarea,
+.formGrid button,
+.formGrid select[multiple] {
+  grid-column: 1 / -1;
+}
+
+.inlineForm {
+  display: grid;
+  grid-template-columns: 1fr 180px auto;
+  gap: 10px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  display: grid;
+  gap: 10px;
+}
+
+.meta,
+#sessionInfo {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chip {
+  padding: 7px 10px;
+  background: var(--fill);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.summary {
+  display: grid;
+  gap: 8px;
+}
+
+#message {
+  margin-top: 18px;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 780px) {
+  .topbar,
+  .two,
+  .formGrid,
+  .inlineForm {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    display: grid;
+  }
+}
