@@ -204,6 +204,24 @@ export const createJob = async (req, res) => {
     }
 
     const { skills = [], requirements = [], ...jobData } = req.body;
+    // DEADLINE VALIDATION
+if (jobData.deadline) {
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const deadlineDate = new Date(jobData.deadline);
+  deadlineDate.setHours(0, 0, 0, 0);
+
+  if (deadlineDate < today) {
+    await transaction.rollback();
+
+    return res.status(400).json({
+      success: false,
+      message: "Deadline date cannot be in the past.",
+    });
+  }
+}
 
     if (!Array.isArray(skills) || skills.length === 0) {
       await transaction.rollback();
