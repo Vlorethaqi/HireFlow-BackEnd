@@ -73,6 +73,21 @@ function formData(form) {
   return Object.fromEntries(new FormData(form).entries());
 }
 
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const contentBase64 = String(reader.result).split(",")[1];
+      resolve({
+        fileName: file.name,
+        contentBase64,
+      });
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 async function loadSkills() {
   const result = await api("/skills");
   state.skills = result.data || result;
@@ -131,10 +146,14 @@ async function loadProfile() {
   const profile = result.data;
   const form = $("#profileForm");
   form.reset();
+  $("#currentCv").innerHTML = "";
   if (!profile) return;
-  ["phone", "location", "education", "experienceYears", "cvUrl", "githubUrl", "linkedinUrl", "bio"].forEach((name) => {
+  ["phone", "location", "education", "experienceYears", "githubUrl", "linkedinUrl", "bio"].forEach((name) => {
     if (form.elements[name]) form.elements[name].value = profile[name] || "";
   });
+  if (profile.cvUrl) {
+    $("#currentCv").innerHTML = `Current CV: <a href="${profile.cvUrl}" target="_blank" rel="noreferrer">Open file</a>`;
+  }
   const selected = new Set((profile.CandidateSkills || []).map((item) => String(item.skillId)));
   [...form.elements.skills.options].forEach((option) => {
     option.selected = selected.has(option.value);
@@ -148,6 +167,14 @@ async function loadApplications() {
       <article class="card">
         <h2>${application.Job?.title || "Application"} #${application.id}</h2>
         <div class="meta">Status: ${application.ApplicationStatus?.name || application.statusId}</div>
+        <div class="meta">
+          CV:
+          ${
+            application.CandidateProfile?.cvUrl
+              ? `<a href="${application.CandidateProfile.cvUrl}" target="_blank" rel="noreferrer">Open file</a>`
+              : "Not uploaded"
+          }
+        </div>
         <p>${application.coverLetter || ""}</p>
         <div class="actions">
           <select data-status="${application.id}">
@@ -226,13 +253,19 @@ $("#profileForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     const payload = formData(event.target);
+    delete payload.cvFile;
     payload.skills = [...event.target.elements.skills.selectedOptions].map((item) => Number(item.value));
     payload.experienceYears = Number(payload.experienceYears || 0);
+    const cvFile = event.target.elements.cvFile.files[0];
+    if (cvFile) {
+      payload.cvFile = await readFileAsBase64(cvFile);
+    }
     const result = await api("/candidate-profiles/me", {
       method: "PUT",
       body: JSON.stringify(payload),
     });
     setMessage(result.message);
+    await loadProfile();
   } catch (error) {
     setMessage(error.message);
   }

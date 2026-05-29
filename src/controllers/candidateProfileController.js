@@ -2,8 +2,31 @@ import CandidateProfile from "../models/CandidateProfile.js";
 import CandidateSkill from "../models/CandidateSkill.js";
 import Skill from "../models/Skill.js";
 import User from "../models/User.js";
+import fs from "fs/promises";
+import path from "path";
 
+const cvUploadDirectory = path.resolve("src", "public", "uploads", "candidate-cvs");
 
+function sanitizeFileName(fileName = "cv.pdf") {
+    return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+async function saveCvFile(userId, cvFile) {
+    if (!cvFile?.contentBase64 || !cvFile?.fileName) {
+        return null;
+    }
+
+    await fs.mkdir(cvUploadDirectory, { recursive: true });
+
+    const safeName = sanitizeFileName(cvFile.fileName);
+    const storedName = `${userId}-${Date.now()}-${safeName}`;
+    const filePath = path.join(cvUploadDirectory, storedName);
+    const fileBuffer = Buffer.from(cvFile.contentBase64, "base64");
+
+    await fs.writeFile(filePath, fileBuffer);
+
+    return `/uploads/candidate-cvs/${storedName}`;
+}
 
 export const getAllProfiles = async (req, res) => {
     try {
@@ -37,7 +60,14 @@ export const getMyProfile = async (req, res) => {
 
 export const upsertMyProfile = async (req, res) => {
     try {
-        const { skills = [], ...profileData } = req.body;
+        const { skills = [], cvFile, ...profileData } = req.body;
+        const savedCvUrl = await saveCvFile(req.user.id, cvFile);
+        if (savedCvUrl) {
+            profileData.cvUrl = savedCvUrl;
+        } else {
+            delete profileData.cvFile;
+        }
+
         const [profile] = await CandidateProfile.findOrCreate({
             where: { userId: req.user.id },
             defaults: {

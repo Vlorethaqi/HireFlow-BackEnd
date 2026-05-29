@@ -63,7 +63,11 @@
           <input name="location" placeholder="Location" />
           <input name="education" placeholder="Education" />
           <input name="experienceYears" type="number" min="0" placeholder="Experience years" />
-          <input name="cvUrl" placeholder="CV file URL" />
+          <label class="fileField">
+            <span>CV file</span>
+            <input name="cvFile" type="file" accept=".pdf,.doc,.docx" />
+          </label>
+          <div id="currentCv" class="meta fullRow"></div>
           <input name="githubUrl" placeholder="GitHub URL" />
           <input name="linkedinUrl" placeholder="LinkedIn URL" />
           <select name="skills" multiple></select>
