@@ -1,5 +1,5 @@
 import express from "express";
-import { Skill } from "../models/index.js";
+import { CandidateSkill, JobSkill, Skill } from "../models/index.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { authorizeRoles } from "../middlewares/roleMiddleware.js";
 
@@ -14,10 +14,24 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", authMiddleware, authorizeRoles("ADMIN"), async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
-    const skill = await Skill.create(req.body);
-    res.status(201).json({ success: true, data: skill });
+    const name = req.body.name?.trim();
+
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Skill name is required" });
+    }
+
+    const [skill, created] = await Skill.findOrCreate({
+      where: { name },
+      defaults: {
+        name,
+        category: req.body.category || "TECHNICAL",
+        description: req.body.description?.trim() || null,
+      },
+    });
+
+    res.status(created ? 201 : 200).json({ success: true, data: skill });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -31,12 +45,17 @@ router.delete("/:id", authMiddleware, authorizeRoles("ADMIN"), async (req, res) 
       return res.status(404).json({ success: false, message: "Skill not found" });
     }
 
+    await Promise.all([
+      JobSkill.destroy({ where: { skillId: skill.id } }),
+      CandidateSkill.destroy({ where: { skillId: skill.id } }),
+    ]);
+
     await skill.destroy();
     res.json({ success: true, message: "Skill deleted successfully" });
   } catch (error) {
-    res.status(409).json({
+    res.status(500).json({
       success: false,
-      message: "Skill could not be deleted. Remove it from jobs or profiles first.",
+      message: "Skill could not be deleted.",
       error: error.message,
     });
   }
