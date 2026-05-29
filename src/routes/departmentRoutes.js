@@ -29,6 +29,14 @@ async function ensureDefaultDepartments(companyId) {
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    if (req.user.role === "CANDIDATE") {
+      const departments = await Department.findAll({
+        order: [["name", "ASC"]],
+      });
+
+      return res.json({ success: true, data: departments });
+    }
+
     await ensureDefaultDepartments(req.user.companyId);
 
     const departments = await Department.findAll({
