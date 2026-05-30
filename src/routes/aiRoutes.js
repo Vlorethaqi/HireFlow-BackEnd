@@ -1,5 +1,5 @@
 import express from "express";
-import { analyzeApplicationController } from "../controllers/ai.controller.js";
+import { analyzeApplicationController, getAiJobController } from "../controllers/ai.controller.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { authorizePermission } from "../middlewares/permissionMiddleware.js";
 
@@ -10,6 +10,13 @@ router.post(
   authMiddleware,
   authorizePermission("applications:review"),
   analyzeApplicationController
+);
+
+router.get(
+  "/jobs/:jobId",
+  authMiddleware,
+  authorizePermission("applications:review"),
+  getAiJobController
 );
 
 export default router;
