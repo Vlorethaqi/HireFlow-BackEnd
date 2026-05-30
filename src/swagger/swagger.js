@@ -243,6 +243,30 @@ const options = {
             companyId: { type: "integer" },
           },
         },
+        BackgroundJob: {
+          type: "object",
+          properties: {
+            id: { type: "string", example: "1717089230000-k4m2p9xq" },
+            type: { type: "string", example: "AI_APPLICATION_ANALYSIS" },
+            status: {
+              type: "string",
+              enum: ["QUEUED", "RUNNING", "COMPLETED", "FAILED"],
+              example: "QUEUED",
+            },
+            result: {
+              type: "object",
+              nullable: true,
+              description: "Rezultati i job-it kur statusi eshte COMPLETED",
+            },
+            error: {
+              type: "string",
+              nullable: true,
+              description: "Mesazhi i gabimit kur statusi eshte FAILED",
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
         LoginRequest: {
           type: "object",
           required: ["email", "password"],
@@ -574,7 +598,65 @@ const options = {
         get: { tags: ["Audit Logs"], summary: "Audit logs per user", parameters: [idParam("userId")], responses: { 200: ok() } },
       },
       "/ai/analyze-application/{applicationId}": {
-        post: { tags: ["AI"], summary: "Analizo aplikim me AI", security: bearer, parameters: [idParam("applicationId")], responses: { 200: ok() } },
+        post: {
+          tags: ["AI"],
+          summary: "Nis analizen AI te aplikimit ne background",
+          security: bearer,
+          parameters: [idParam("applicationId")],
+          responses: {
+            202: {
+              description: "AI analysis started in the background",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      message: { type: "string", example: "AI analysis started in the background." },
+                      data: { $ref: "#/components/schemas/BackgroundJob" },
+                    },
+                  },
+                },
+              },
+            },
+            401: ok("Unauthorized"),
+            403: ok("Permission denied"),
+          },
+        },
+      },
+      "/ai/jobs/{jobId}": {
+        get: {
+          tags: ["AI"],
+          summary: "Kontrollo statusin e background job-it te AI",
+          security: bearer,
+          parameters: [
+            {
+              name: "jobId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            200: {
+              description: "Background job status",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/BackgroundJob" },
+                    },
+                  },
+                },
+              },
+            },
+            401: ok("Unauthorized"),
+            403: ok("Permission denied"),
+            404: ok("Background job not found"),
+          },
+        },
       },
     },
   },
