@@ -57,6 +57,16 @@ export const applyToJob = async (req, res) => {
             });
         }
 
+        const requiredProfileFields = ["phone", "location", "education", "cvUrl"];
+        const hasMissingProfileData = requiredProfileFields.some((field) => !profile[field]);
+
+        if (hasMissingProfileData) {
+            return res.status(400).json({
+                success: false,
+                message: "Duhet të plotësoni profilin dhe të ngarkoni CV-në para se të aplikoni."
+            });
+        }
+
         const job = await Job.findByPk(jobId);
         if (!job) {
             return res.status(404).json({
