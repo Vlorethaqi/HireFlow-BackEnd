@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import sequelize from "../config/db.js";
 import { AuditLog, Department, Job, JobRequirement, JobSkill, Skill } from "../models/index.js";
+import { cacheKeys, deleteCachePattern, getCache, setCache } from "../services/cache.service.js";
 
 const toNumber = (value) => {
   const number = Number(value);
@@ -9,6 +10,13 @@ const toNumber = (value) => {
 
 export const getAllJobs = async (req, res) => {
   try {
+    const key = cacheKeys().jobsQuery(req.query);
+    const cachedJobs = await getCache(key);
+
+    if (cachedJobs) {
+      return res.json(cachedJobs);
+    }
+
     const hasFilters = Object.keys(req.query).length > 0;
 
     if (!hasFilters) {
@@ -25,6 +33,7 @@ export const getAllJobs = async (req, res) => {
         ],
         order: [["createdAt", "DESC"]],
       });
+      await setCache(key, jobs, 120);
       return res.json(jobs);
     }
 
@@ -172,7 +181,7 @@ export const getAllJobs = async (req, res) => {
       order: [[safeSortBy, safeSortOrder]],
     });
 
-    res.json({
+    const payload = {
       data: jobs.rows,
       pagination: {
         total: jobs.count,
@@ -181,7 +190,10 @@ export const getAllJobs = async (req, res) => {
         totalPages: Math.ceil(jobs.count / limitNumber),
       },
       filters: req.query,
-    });
+    };
+
+    await setCache(key, payload, 120);
+    res.json(payload);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -288,6 +300,7 @@ if (jobData.deadline) {
     }, { transaction });
 
     await transaction.commit();
+    await deleteCachePattern("jobs:query:*");
 
     const createdJob = await Job.findByPk(job.id, {
       include: [

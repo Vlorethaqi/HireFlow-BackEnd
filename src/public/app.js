@@ -1,9 +1,22 @@
+function readStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+}
+
 const state = {
   token: localStorage.getItem("token"),
-  user: JSON.parse(localStorage.getItem("user") || "null"),
+  user: readStoredUser(),
   skills: [],
   departments: [],
 };
+
+if (state.token && !state.user) {
+  localStorage.clear();
+  state.token = null;
+}
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -31,7 +44,7 @@ function setMessage(value) {
 }
 
 function setSession(result) {
-  state.token = result.token;
+  state.token = result.token || result.accessToken;
   state.user = result.user;
   localStorage.setItem("token", state.token);
   localStorage.setItem("user", JSON.stringify(state.user));

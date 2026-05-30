@@ -1,11 +1,18 @@
 import { Role, User } from "../models/index.js";
 import bcrypt from "bcrypt";
+import { cacheKeys, deleteCache, deleteCachePattern, getCache, setCache } from "./cache.service.js";
 
 
 // GET ALL USERS
 export async function getAllUsersService(companyId) {
+  const key = cacheKeys().users(companyId);
+  const cachedUsers = await getCache(key);
 
-  return await User.findAll({
+  if (cachedUsers) {
+    return cachedUsers;
+  }
+
+  const users = await User.findAll({
     where: {
       companyId,
       isActive: true
@@ -14,6 +21,10 @@ export async function getAllUsersService(companyId) {
       exclude: ["password"]
     }
   });
+
+  await setCache(key, users);
+
+  return users;
 }
 
 
@@ -112,6 +123,9 @@ export async function createUserService(data) {
     isActive: true
   });
 
+  await deleteCache(cacheKeys().users(data.companyId));
+  await deleteCachePattern(`permission:${data.companyId}:*`);
+
   const { password, ...safeUser } =
     existingUser.toJSON();
 
@@ -204,6 +218,9 @@ export async function updateUserService(
 
   await user.update(updateData);
 
+  await deleteCache(cacheKeys().users(companyId));
+  await deleteCachePattern(`permission:${companyId}:*`);
+
   const { password, ...safeUser } = user.toJSON();
 
   return safeUser;
@@ -239,6 +256,9 @@ export async function deleteUserService(
   await user.update({
     isActive: false
   });
+
+  await deleteCache(cacheKeys().users(companyId));
+  await deleteCachePattern(`permission:${companyId}:*`);
 
   return true;
 }

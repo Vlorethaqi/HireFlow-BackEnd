@@ -1,4 +1,5 @@
 import { Permission, Role, RolePermission } from "../models/index.js";
+import { cacheKeys, getCache, setCache } from "../services/cache.service.js";
 
 export function authorizePermission(permissionName) {
     return async (req, res, next) => {
@@ -8,6 +9,17 @@ export function authorizePermission(permissionName) {
                     success: false,
                     message: "Unauthorized",
                 });
+            }
+
+            const cacheKey = cacheKeys().permission(
+                req.user.companyId,
+                req.user.role,
+                permissionName
+            );
+            const cachedPermission = await getCache(cacheKey);
+
+            if (cachedPermission?.allowed) {
+                return next();
             }
 
             const role = await Role.findOne({
@@ -50,6 +62,12 @@ export function authorizePermission(permissionName) {
                     message: "Permission denied",
                 });
             }
+
+            await setCache(cacheKey, {
+                allowed: true,
+                roleId: role.id,
+                permissionId: permission.id,
+            }, 600);
 
             next();
         } catch (error) {

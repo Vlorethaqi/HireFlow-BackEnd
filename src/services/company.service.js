@@ -9,6 +9,7 @@ import {
     RolePermission,
     User,
 } from "../models/index.js";
+import { cacheKeys, deleteCache, getCache, setCache } from "./cache.service.js";
 
 const DEFAULT_DEPARTMENTS = [
     "Teknologji Informative",
@@ -133,16 +134,42 @@ async function createDefaultDepartments(companyId) {
 
 // GET COMPANIES
 export async function getCompaniesService(companyId) {
-    return await Company.findAll({
+    const key = cacheKeys().company(companyId);
+    const cachedCompany = await getCache(key);
+
+    if (cachedCompany) {
+        return [cachedCompany];
+    }
+
+    const companies = await Company.findAll({
         where: {
             id: companyId,
         },
     });
+
+    if (companies[0]) {
+        await setCache(key, companies[0]);
+    }
+
+    return companies;
 }
 
 // GET MY COMPANY
 export async function getMyCompanyService(companyId) {
-    return await Company.findByPk(companyId);
+    const key = cacheKeys().company(companyId);
+    const cachedCompany = await getCache(key);
+
+    if (cachedCompany) {
+        return cachedCompany;
+    }
+
+    const company = await Company.findByPk(companyId);
+
+    if (company) {
+        await setCache(key, company);
+    }
+
+    return company;
 }
 
 // GET COMPANY BY ID
@@ -237,6 +264,7 @@ export async function createCompanyService(data, loggedUserId = null) {
 
     await createDefaultPermissions(roles);
     await createDefaultDepartments(company.id);
+    await deleteCache(cacheKeys().company(company.id));
 
     const adminRole = roles.find((role) => role.name === "ADMIN");
     let admin = existingUser;
@@ -290,6 +318,8 @@ export async function updateCompanyService(id, data, companyId) {
         isActive: data.isActive,
     });
 
+    await deleteCache(cacheKeys().company(companyId));
+
     return company;
 }
 
@@ -303,6 +333,8 @@ export async function deleteCompanyService(id, companyId) {
     await company.update({
         isActive: false,
     });
+
+    await deleteCache(cacheKeys().company(companyId));
 
     return true;
 }
