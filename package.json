@@ -15,14 +15,17 @@
       "swagger-ui-express": "^5.0.1"
    },
    "devDependencies": {
+      "jest": "^30.4.2",
       "nodemon": "^3.1.14",
-      "sequelize-cli": "^6.6.5"
+      "sequelize-cli": "^6.6.5",
+      "supertest": "^7.2.2"
    },
    "scripts": {
       "start": "node src/server.js",
       "dev": "nodemon src/server.js",
       "db:migrate": "sequelize-cli db:migrate",
       "db:migrate:status": "sequelize-cli db:migrate:status",
-      "db:migrate:undo": "sequelize-cli db:migrate:undo"
+      "db:migrate:undo": "sequelize-cli db:migrate:undo",
+      "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
    }
 }
